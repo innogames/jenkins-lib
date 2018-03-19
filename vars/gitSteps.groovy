@@ -13,8 +13,9 @@ def Version(String upd, Map part) {
             error('Something wrong in parameters')
     }
 }
-def BranchOrTag(env) {
-    if ([env['TAG_DATE'], env['TAG_NAME'], env['TAG_TIMESTAMP'], env['TAG_UNIXTIME']] != [null, null, null, null]) {
+
+def BranchOrTag(EnvActionImpl env) {
+    if ([env['TAG_DATE'], env['TAG_NAME'], env['TAG_TIMESTAMP'], env['TAG_UNIXTIME']] != [null, null, null, null] && env['TAG_NAME'] == env['BRANCH_NAME']) {
         return 'tag'
     } else if (env['BRANCH_NAME'] != null) {
         return 'branch'
@@ -34,7 +35,10 @@ def call(Map config) {
         $class: 'GitSCM',
         branches: scm.branches,
         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-        extensions: [[$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: '']],
+        extensions: [
+            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+            [$class: 'WipeWorkspace']
+        ],
         userRemoteConfigs: scm.userRemoteConfigs,
     ])
 
@@ -43,15 +47,14 @@ def call(Map config) {
         env[k] = v
     }
 
-    // Remote repo name
+    // Remote repo name. we don't expect more than one remote
     env['GIT_REMOTE'] = sh(returnStdout: true, script: 'git remote').trim()
-
     // Do we building from branch or tag?
-    echo "${env.getClass()}"
     env['GIT_BRANCH_OR_TAG'] = BranchOrTag(env)
     // Last version from tags
     env['GIT_LAST_VERSION'] = sh(returnStdout: true,
         script: 'git tag -l "v[0-9]*"| sort -V | tail -n 1').trim()
+    env['GIT_LOCAL_BRANCH'] = "${env['GIT_BRANCH'].replaceFirst('^' + env['GIT_REMOTE'] + '/', '')}"
 
     // Geting version parts
     versionParts = [:]
