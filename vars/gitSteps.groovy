@@ -14,7 +14,7 @@ def Version(String upd, Map part) {
     }
 }
 
-def BranchOrTag(EnvActionImpl env) {
+def BranchOrTag(env) {
     if ([env['TAG_DATE'], env['TAG_NAME'], env['TAG_TIMESTAMP'], env['TAG_UNIXTIME']] != [null, null, null, null] && env['TAG_NAME'] == env['BRANCH_NAME']) {
         return 'tag'
     } else if (env['BRANCH_NAME'] != null) {
