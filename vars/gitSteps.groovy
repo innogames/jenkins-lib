@@ -24,27 +24,24 @@ def BranchOrTag(env) {
 }
 
 def call(Map config) {
-    // !!! There impossible to invoke env.VAR in modules, only env['VAR']
-    // Getting all parameters in env
-    params.each{ k, v ->
-        env[k] = v
-    }
     // Every UPPERCASE var should be passed into env
-    // Checking out sources with tags
-    def results = checkout([
-        $class: 'GitSCM',
-        branches: scm.branches,
-        doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-        extensions: [
-            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-            [$class: 'WipeWorkspace']
-        ],
-        userRemoteConfigs: scm.userRemoteConfigs,
-    ])
+    // Checking out sources with tags if needed
+    if (config.checkout) {
+        def results = checkout([
+            $class: 'GitSCM',
+            branches: scm.branches,
+            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+            extensions: [
+                [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                [$class: 'WipeWorkspace']
+            ],
+            userRemoteConfigs: scm.userRemoteConfigs,
+        ])
 
-    // Map all results variables into env
-    results.each{ k, v ->
-        env[k] = v
+        // Map all results variables into env
+        results.each{ k, v ->
+            env[k] = v
+        }
     }
 
     // Remote repo name. We don't expect more than one remote
