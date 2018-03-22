@@ -15,7 +15,6 @@ def Boolean onlyMavenRelease() {
 
 def packageVersion() {
     // For building from tags. Getting info about released version
-    env['VERSION_FROM_POM'] = sh(returnStdout: true, script:
+    return sh(returnStdout: true, script:
         '''mvn -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec -q''').trim()
-    echo env['VERSION_FROM_POM']
 }
