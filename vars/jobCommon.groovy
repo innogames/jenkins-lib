@@ -10,11 +10,21 @@ def Boolean launchedByUser() {
     return currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause) != null
 }
 
+// config should contain next keys:
+//  - emulate (optional): for debugging and development of jenkins' jobs
+//  - file: debian package file
+//  - token: deb-drop token
+//  - repo: repository for uploading
 def uploadPackage (Map config) {
-    sh """\
-        #!/bin/bash -e
-        ls -l "${config.file}"
-        echo curl -qf -F token="${config.token}" -F repos="${config.repo}" -F package="@${config.file}" "${env.DEB_DROP_URL}"
-       """.stripIndent()
-    echo "${config.file} uploaded to ${config.repo}"
+    if (! fileExists(config.file)) {
+        error "File ${config.file} doesn't exists, abort uploading to repo"
+    }
+    if (config.emulate) {
+        echo "Emulate uploading of ${config.file} to ${config.repo} with token ${config.token}"
+        sh "echo curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' '${env.DEB_DROP_URL}'"
+        echo "${config.file} uploaded to ${config.repo}"
+    } else {
+        sh "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' '${env.DEB_DROP_URL}'"
+        echo "${config.file} uploaded to ${config.repo}"
+    }
 }
