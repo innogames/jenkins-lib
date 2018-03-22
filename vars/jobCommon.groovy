@@ -16,5 +16,5 @@ def uploadPackage (Map config) {
         ls -l "${config.file}"
         echo curl -qf -F token="${config.token}" -F repos="${config.repo}" -F package="@${config.file}" "${env.DEB_DROP_URL}"
        """.stripIndent()
-    echo "${config.pkg} uploaded to ${config.repo}"
+    echo "${config.file} uploaded to ${config.repo}"
 }
