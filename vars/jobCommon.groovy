@@ -29,7 +29,21 @@ def uploadPackage (Map config) {
     }
 }
 
+// Processing exceptions in `catch` sections
 def processException(hudson.AbortException e) {
     currentBuild.result = 'FAILURE'
     error "Something wrong, exception is: ${e}"
+}
+
+// Post running slack notifications
+def postSlack () {
+    colors = [SUCCESS: '#00FF00', FAILURE: '#FF0000', UNSTABLE: '#FFCC00']
+    if (! ['SUCCESS', 'ABORTED'].contains(currentBuild.getPreviousBuild().result) &&
+        currentBuild.currentResult == 'SUCCESS') {
+        echo "Previous build status was ${currentBuild.getPreviousBuild().result}, current is ${currentBuild.currentResult}"
+        slackSend color: colors[currentBuild.currentResult], message: "Job back to Normal: ${env.JOB_NAME} - #${env.BUILD_NUMBER} Success (${env.BUILD_URL})"
+    } else if ( ["FAILURE", "UNSTABLE"].contains(currentBuild.currentResult) ) {
+        echo "Current job status is ${currentBuild.currentResult}"
+        slackSend color: colors[currentBuild.currentResult], message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} ${currentBuild.currentResult} (${env.BUILD_URL})"
+    }
 }
