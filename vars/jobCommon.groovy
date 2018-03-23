@@ -28,3 +28,8 @@ def uploadPackage (Map config) {
         echo "${config.file} uploaded to ${config.repo}"
     }
 }
+
+def processException(hudson.AbortException e) {
+    currentBuild.result = 'FAILURE'
+    error "Something wrong, exception is: ${e}"
+}
