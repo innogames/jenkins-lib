@@ -60,6 +60,7 @@ def call(Map config) {
         versionParts.major = 0
         versionParts.minor = 0
         versionParts.patch = 1
+        env['NEW_VERSION'] = "${versionParts.major}.${versionParts.minor}.${versionParts.patch}"
     } else {
         vp = env['GIT_LAST_VERSION'].replaceFirst(~/^v/,'').tokenize('.')
         vp.eachWithIndex{v, k ->
@@ -68,8 +69,8 @@ def call(Map config) {
         versionParts.major = vp[0]
         versionParts.minor = vp[1]
         versionParts.patch = vp[2]
+        env['NEW_VERSION'] = Version(params.UPDATE_VERSION, versionParts)
     }
-    env['NEW_VERSION'] = Version(params.UPDATE_VERSION, versionParts)
 
     env['GIT_NEW_TAG'] = "v${env['NEW_VERSION']}"
 }
