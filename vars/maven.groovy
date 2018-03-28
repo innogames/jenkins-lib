@@ -4,13 +4,25 @@
 // Git commettee ignore doesn't work
 // return False on 'git push --force'
 def Boolean onlyMavenRelease() {
-    def String notMavenCommits = sh(returnStdout: true, script:
-        '''\
-        #!/bin/bash
-        git log --oneline ${GIT_PREVIOUS_COMMIT}..${GIT_COMMIT} | grep -vF '[maven-release-plugin]' || exit 0
-        '''.stripIndent()).trim()
-    echo "Not maven commits are:\n${notMavenCommits}"
-    return notMavenCommits == ''
+    switch (env.GIT_PREVIOUS_COMMIT) {
+        case null:
+            // First build, continue
+            return false
+        default:
+            def String notMavenCommits = sh(returnStdout: true, script:
+                '''\
+                #!/bin/bash
+                # Checking for not rewrited history
+                if git cat-file -e ${GIT_PREVIOUS_COMMIT} && git cat-file -e ${GIT_COMMIT}
+                then
+                    git log --oneline ${GIT_PREVIOUS_COMMIT}..${GIT_COMMIT} | grep -vF '[maven-release-plugin]' || exit 0
+                else
+                    echo "History was rewritten, continue"
+                fi
+                '''.stripIndent()).trim()
+            echo "Not maven commits are:\n${notMavenCommits}"
+            return notMavenCommits == ''
+    }
 }
 
 def packageVersion() {
