@@ -69,8 +69,12 @@ def processException(hudson.AbortException e) {
 // Post running slack notifications
 def postSlack () {
     colors = [SUCCESS: '#00FF00', FAILURE: '#FF0000', UNSTABLE: '#FFCC00']
-    if (! ['SUCCESS', 'ABORTED', 'NOT_BUILT'].contains(currentBuild.getPreviousBuild().result) &&
-        currentBuild.currentResult == 'SUCCESS') {
+   if ( !(
+          currentBuild.getPreviousBuild() == null ||
+          ['SUCCESS', 'ABORTED', 'NOT_BUILT'].contains(
+          currentBuild.getPreviousBuild().result
+          )
+        ) && currentBuild.currentResult == 'SUCCESS') {
         echo "Previous build status was ${currentBuild.getPreviousBuild().result}, current is ${currentBuild.currentResult}"
         slackSend color: colors[currentBuild.currentResult], message: "Job back to Normal: ${env.JOB_NAME} - #${env.BUILD_NUMBER} Success (${env.BUILD_URL})"
     } else if ( ["FAILURE", "UNSTABLE"].contains(currentBuild.currentResult) ) {
