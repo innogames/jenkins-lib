@@ -10,6 +10,35 @@ def Boolean launchedByUser() {
     return currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause) != null
 }
 
+// Check if since last building only commits from ${env.GIT_COMMITTER_EMAIL} was added
+// return false on 'git push --force'
+def Boolean onlyJenkinsRelease() {
+    // If git commiter not configured, so push back from jenkins shouldn't be possible
+    if ([null, ''].contains(env.GIT_COMMITTER_EMAIL)) {
+        return false
+    }
+    switch (env.GIT_PREVIOUS_COMMIT) {
+        case null:
+            // First build, continue
+            return false
+        default:
+            def String notMavenCommits = sh(returnStdout: true, script:
+                '''\
+                #!/bin/bash
+                # Checking for not rewrited history
+                if git cat-file -e ${GIT_PREVIOUS_COMMIT} && git cat-file -e ${GIT_COMMIT}
+                then
+                    git log --oneline --pretty='format:%h (%ce): %s' ${GIT_PREVIOUS_COMMIT}..${GIT_COMMIT} | grep -vF "${GIT_COMMITTER_EMAIL}" || exit 0
+                else
+                    echo "History was rewritten, continue"
+                fi
+                '''.stripIndent()).trim()
+            echo "Not jenkins commits are:\n${notMavenCommits}"
+            return notMavenCommits == ''
+    }
+}
+
+// Upload built package to repo
 // config should contain next keys:
 //  - emulate (optional): for debugging and development of jenkins' jobs
 //  - file: debian package file
