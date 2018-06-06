@@ -12,9 +12,9 @@ def Boolean launchedByUser() {
 
 def uploadPackage (Map config) {
     sh """\
-           #!/bin/bash -e
-           ls -l "${config.repo}"
-           echo curl -qf -F token="${config.token}" -F repos="${config.repo}" -F package="@${config.file}" "${env.DEB_DROP_URL}"
-           echo "${config.pkg} uploaded to ${config.repo}"
+        #!/bin/bash -e
+        ls -l "${config.file}"
+        echo curl -qf -F token="${config.token}" -F repos="${config.repo}" -F package="@${config.file}" "${env.DEB_DROP_URL}"
        """.stripIndent()
+    echo "${config.pkg} uploaded to ${config.repo}"
 }
