@@ -40,6 +40,26 @@ def buildParameters(Map config=[:]) {
     }
 }
 
+// Cleaning out all previous builds with status in ['ABORTED', 'NOT_BUILT']
+def cleanNotFinishedBuilds(statusesToClean = ['ABORTED', 'NOT_BUILT']) {
+    def builds = jenkins.model.Jenkins.instance.getItemByFullName(env.JOB_NAME).builds
+    println "Checking next builds if their status in ${statusesToClean}: ${builds}"
+    // We HAVE to use `for` with reversed order.
+    // If we use `[].each` -> after deleting some build java.util.NoSuchElementException caused
+    // If we use `i++` -> after any deletion the rest of array shifted "left"
+    for (i=builds.size() - 1; i>=0; i--) {
+        if (statusesToClean.contains(builds[i].result.toString())) {
+            println "going to delete ${builds[i]}"
+            try {
+                builds[i].delete()
+            }
+            catch (all) {
+                println "Error while deleting: ${all}"
+            }
+        }
+    }
+}
+
 // Processing exceptions in `catch` sections
 def processException(hudson.AbortException e) {
     currentBuild.result = 'FAILURE'
