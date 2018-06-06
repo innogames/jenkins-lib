@@ -47,7 +47,7 @@ def call(Map config) {
         env[k] = v
     }
 
-    // Remote repo name. we don't expect more than one remote
+    // Remote repo name. We don't expect more than one remote
     env['GIT_REMOTE'] = sh(returnStdout: true, script: 'git remote').trim()
     // Do we building from branch or tag?
     env['GIT_BRANCH_OR_TAG'] = BranchOrTag(env)

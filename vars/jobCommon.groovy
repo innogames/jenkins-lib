@@ -9,3 +9,12 @@ def String dockerArgs() {
 def Boolean launchedByUser() {
     return currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause) != null
 }
+
+def uploadPackage (Map config) {
+    sh """\
+           #!/bin/bash -e
+           ls -l "${config.repo}"
+           echo curl -qf -F token="${config.token}" -F repos="${config.repo}" -F package="@${config.file}" "${env.DEB_DROP_URL}"
+           echo "${config.pkg} uploaded to ${config.repo}"
+       """.stripIndent()
+}
