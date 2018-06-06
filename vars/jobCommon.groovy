@@ -29,6 +29,17 @@ def uploadPackage (Map config) {
     }
 }
 
+// Sets build name and description, does nothing on blank config
+def buildParameters(Map config=[:]) {
+    config.each { k, v ->
+        switch (k) {
+            case 'displayName': currentBuild.k = v; break
+            case 'description': currentBuild.k = v; break
+            default: break
+        }
+    }
+}
+
 // Processing exceptions in `catch` sections
 def processException(hudson.AbortException e) {
     currentBuild.result = 'FAILURE'
