@@ -49,20 +49,21 @@ def call(Map config) {
     // Do we building from branch or tag?
     env['GIT_BRANCH_OR_TAG'] = BranchOrTag(env)
     // Last version from tags
-    env['GIT_LAST_VERSION'] = sh(returnStdout: true,
+    env['GIT_LAST_VERSION_TAG'] = sh(returnStdout: true,
         script: 'git tag -l "v[0-9]*"| sort -V | tail -n 1').trim()
     env['GIT_LOCAL_BRANCH'] = "${env['GIT_BRANCH'].replaceFirst('^' + env['GIT_REMOTE'] + '/', '')}"
 
     // Geting version parts
     versionParts = [:]
-    if (!(env['GIT_LAST_VERSION'] =~ /^v(\d+\.)+\d+$/)) {
-        echo "There no or wrong last version in tags (${env['GIT_LAST_VERSION']}), creating the first release 0.0.1"
+    if (!(env['GIT_LAST_VERSION_TAG'] =~ /^v(\d+\.)+\d+$/)) {
+        echo "There no or wrong last version in tags (${env['GIT_LAST_VERSION_TAG']}), creating the first release 0.0.1"
         versionParts.major = 0
         versionParts.minor = 0
         versionParts.patch = 1
         env['NEW_VERSION'] = "${versionParts.major}.${versionParts.minor}.${versionParts.patch}"
     } else {
-        vp = env['GIT_LAST_VERSION'].replaceFirst(~/^v/,'').tokenize('.')
+        env['GIT_LAST_VERSION'] = env['GIT_LAST_VERSION_TAG'].replaceFirst(~/^v/,'')
+        vp = env['GIT_LAST_VERSION'].tokenize('.')
         vp.eachWithIndex{v, k ->
             vp[k] = v?.isInteger() ? v.toInteger() : 0
         }
@@ -73,4 +74,10 @@ def call(Map config) {
     }
 
     env['GIT_NEW_TAG'] = "v${env['NEW_VERSION']}"
+    env['TARGET_VERSION'] = env['GIT_BRANCH_OR_TAG'] == 'branch' ? env['NEW_VERSION'] : env['GIT_LAST_VERSION']
+
+    // We change build display name by default
+    if (config.get('changeBuildName', true)) {
+        currentBuild.displayName = "v${env['TARGET_VERSION']} (${env['BRANCH_NAME']} - ${params.UPDATE_VERSION})"
+    }
 }
