@@ -97,7 +97,7 @@ def processException(hudson.AbortException e) {
 
 // Post running slack notifications
 def postSlack () {
-    colors = [SUCCESS: '#00FF00', FAILURE: '#FF0000', UNSTABLE: '#FFCC00']
+    colors = [SUCCESS: 'good', FAILURE: 'danger', UNSTABLE: 'warning']
    if ( !(
           currentBuild.getPreviousBuild() == null ||
           ['SUCCESS', 'ABORTED', 'NOT_BUILT'].contains(
