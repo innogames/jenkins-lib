@@ -98,7 +98,7 @@ def processException(hudson.AbortException e) {
 }
 
 // Post running slack notifications
-def postSlack(verbose = false) {
+def postSlack(verbose = false, channel = null) {
     colors = [SUCCESS: 'good', FAILURE: 'danger', UNSTABLE: 'warning']
     msg = env.JOB_NAME + " - " + currentBuild.displayName
 
@@ -114,15 +114,18 @@ def postSlack(verbose = false) {
         msg += ' Aborted after ' + Util.getTimeSpanString(currentBuild.duration)
     } else if (currentBuild.getPreviousBuild().result != 'SUCCESS') {
         lastSuccessfulBuild = currentBuild.getPreviousBuild()
-        while (lastSuccessfulBuild.result != 'SUCCESS') {
+        while (lastSuccessfulBuild && lastSuccessfulBuild.result != 'SUCCESS') {
             lastSuccessfulBuild = lastSuccessfulBuild.getPreviousBuild()
         }
 
-        msg += ' Back to normal after ' + Util.getTimeSpanString(System.currentTimeMillis() - lastSuccessfulBuild.startTimeInMillis)
+        msg += ' Back to normal'
+        if (lastSuccessfulBuild) {
+            msg += ' ' + Util.getTimeSpanString(System.currentTimeMillis() - lastSuccessfulBuild.startTimeInMillis)
+        }
     } else if (verbose) {
         msg += ' Success after ' + Util.getTimeSpanString(currentBuild.duration)
     }
     msg += " (<${currentBuild.absoluteUrl}|Open>)"
 
-    slackSend color: colors[currentBuild.currentResult], message: msg
+    slackSend color: colors[currentBuild.currentResult], message: msg, channel: channel
 }
