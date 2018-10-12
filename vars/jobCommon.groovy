@@ -1,5 +1,7 @@
 #!/usr/bin/groovy
 
+import hudson.Util
+
 // common docker options
 def String dockerArgs() {
     return "-v /dev/shm:/dev/shm -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v /etc/ssh/ssh_known_hosts:/etc/ssh/ssh_known_hosts:ro -v ${env.HUDSON_HOME}:${env.HUDSON_HOME}:rw"
@@ -44,8 +46,8 @@ def Boolean onlyJenkinsRelease() {
 //  - file: debian package file
 //  - token: deb-drop token
 //  - repo: repository for uploading
-def uploadPackage (Map config) {
-    if (! fileExists(config.file)) {
+def uploadPackage(Map config) {
+    if (!fileExists(config.file)) {
         error "File ${config.file} doesn't exists, abort uploading to repo"
     }
     if (config.emulate) {
@@ -59,7 +61,7 @@ def uploadPackage (Map config) {
 }
 
 // Sets build name and description, does nothing on blank config
-def buildParameters(Map config=[:]) {
+def buildParameters(Map config = [:]) {
     config.each { k, v ->
         switch (k) {
             case 'displayName': currentBuild.k = v; break
@@ -76,7 +78,7 @@ def cleanNotFinishedBuilds(statusesToClean = ['ABORTED', 'NOT_BUILT']) {
     // We HAVE to use `for` with reversed order.
     // If we use `[].each` -> after deleting some build java.util.NoSuchElementException caused
     // If we use `i++` -> after any deletion the rest of array shifted "left"
-    for (i=builds.size() - 1; i>=0; i--) {
+    for (i = builds.size() - 1; i >= 0; i--) {
         if (statusesToClean.contains(builds[i].result.toString())) {
             println "going to delete ${builds[i]}"
             try {
@@ -96,18 +98,31 @@ def processException(hudson.AbortException e) {
 }
 
 // Post running slack notifications
-def postSlack () {
+def postSlack(verbose = false) {
     colors = [SUCCESS: 'good', FAILURE: 'danger', UNSTABLE: 'warning']
-   if ( !(
-          currentBuild.getPreviousBuild() == null ||
-          ['SUCCESS', 'ABORTED', 'NOT_BUILT'].contains(
-          currentBuild.getPreviousBuild().result
-          )
-        ) && currentBuild.currentResult == 'SUCCESS') {
-        echo "Previous build status was ${currentBuild.getPreviousBuild().result}, current is ${currentBuild.currentResult}"
-        slackSend color: colors[currentBuild.currentResult], message: "Job back to Normal: ${env.JOB_NAME} - #${env.BUILD_NUMBER} Success (${env.BUILD_URL})"
-    } else if ( ["FAILURE", "UNSTABLE"].contains(currentBuild.currentResult) ) {
-        echo "Current job status is ${currentBuild.currentResult}"
-        slackSend color: colors[currentBuild.currentResult], message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} ${currentBuild.currentResult} (${env.BUILD_URL})"
+    msg = env.JOB_NAME + " - " + currentBuild.displayName
+
+    if (['FAILURE', 'UNSTABLE'].contains(currentBuild.currentResult)) {
+        if (['FAILURE', 'UNSTABLE'].contains(currentBuild.getPreviousBuild().result)) {
+            msg += ' Still failing'
+        } else {
+            msg += ' Failure'
+        }
+
+        msg += ' after ' + Util.getTimeSpanString(currentBuild.duration)
+    } else if (['ABORTED', 'NOT_BUILT'].contains(currentBuild.currentResult)) {
+        msg += ' Aborted after ' + Util.getTimeSpanString(currentBuild.duration)
+    } else if (currentBuild.getPreviousBuild().result != 'SUCCESS') {
+        lastSuccessfulBuild = currentBuild.getPreviousBuild()
+        while (lastSuccessfulBuild.result != 'SUCCESS') {
+            lastSuccessfulBuild = lastSuccessfulBuild.getPreviousBuild()
+        }
+
+        msg += ' Back to normal after ' + Util.getTimeSpanString(System.currentTimeMillis() - lastSuccessfulBuild.startTimeInMillis)
+    } else if (verbose) {
+        msg += ' Success after ' + Util.getTimeSpanString(currentBuild.duration)
     }
+    msg += " (<${currentBuild.absoluteUrl}|Open>)"
+
+    slackSend color: colors[currentBuild.currentResult], message: msg
 }
