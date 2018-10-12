@@ -124,7 +124,10 @@ def postSlack(verbose = false, channel = null) {
         }
     } else if (verbose) {
         msg += ' Success after ' + Util.getTimeSpanString(currentBuild.duration)
+    } else {
+        return
     }
+
     msg += " (<${currentBuild.absoluteUrl}|Open>)"
 
     slackSend color: colors[currentBuild.currentResult], message: msg, channel: channel
