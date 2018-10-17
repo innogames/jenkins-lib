@@ -99,6 +99,7 @@ def processException(hudson.AbortException e) {
 
 // Post running slack notifications
 def postSlack(verbose = false, channel = null) {
+    echo "Slack notification with verbose=${verbose} and overwriting of default channel=${channel}"
     colors = [SUCCESS: 'good', FAILURE: 'danger', UNSTABLE: 'warning']
     msg = env.JOB_NAME + " - " + currentBuild.displayName
 
@@ -112,7 +113,10 @@ def postSlack(verbose = false, channel = null) {
         msg += ' after ' + Util.getTimeSpanString(currentBuild.duration)
     } else if (['ABORTED', 'NOT_BUILT'].contains(currentBuild.currentResult)) {
         msg += ' Aborted after ' + Util.getTimeSpanString(currentBuild.duration)
-    } else if (currentBuild.getPreviousBuild().result != 'SUCCESS') {
+    } else if (
+      currentBuild.getPreviousBuild() && // if it's not null
+      currentBuild.getPreviousBuild().result != 'SUCCESS'
+    ) {
         lastSuccessfulBuild = currentBuild.getPreviousBuild()
         while (lastSuccessfulBuild && lastSuccessfulBuild.result != 'SUCCESS') {
             lastSuccessfulBuild = lastSuccessfulBuild.getPreviousBuild()
