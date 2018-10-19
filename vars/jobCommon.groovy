@@ -111,7 +111,10 @@ def postSlack(verbose = false, channel = null) {
         }
 
         msg += ' after ' + Util.getTimeSpanString(currentBuild.duration)
-    } else if (['ABORTED', 'NOT_BUILT'].contains(currentBuild.currentResult)) {
+    } else if (
+      ['ABORTED', 'NOT_BUILT'].contains(currentBuild.currentResult) &&
+      verbose
+    ) {
         msg += ' Aborted after ' + Util.getTimeSpanString(currentBuild.duration)
     } else if (
       currentBuild.getPreviousBuild() && // if it's not null
