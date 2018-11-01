@@ -104,7 +104,10 @@ def postSlack(verbose = false, channel = null) {
     msg = env.JOB_NAME + " - " + currentBuild.displayName
 
     if (['FAILURE', 'UNSTABLE'].contains(currentBuild.currentResult)) {
-        if (['FAILURE', 'UNSTABLE'].contains(currentBuild.getPreviousBuild().result)) {
+        if (
+            currentBuild.getPreviousBuild() &&
+            ['FAILURE', 'UNSTABLE'].contains(currentBuild.getPreviousBuild().result)
+        ) {
             msg += ' Still failing'
         } else {
             msg += ' Failure'
