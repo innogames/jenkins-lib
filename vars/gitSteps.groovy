@@ -9,6 +9,8 @@ def Version(String upd, Map part) {
             return "${part.major}.${part.minor + 1}.0"
         case 'major':
             return "${part.major + 1}.0.0"
+        case null :
+            return ""
         default:
             error('Something wrong in parameters')
     }
