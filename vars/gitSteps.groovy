@@ -28,6 +28,12 @@ def BranchOrTag(env) {
 def call(Map config) {
     // Every UPPERCASE var should be passed into env
     // Checking out sources with tags if needed
+    /*
+     * Available config elements:
+     *      checkout (bool): is checkout needed or not
+     *      checkout_extensions (array): additional extentions besides CloneOption and WipeWorkspace.
+     *      changeBuildName (bool): should be a build name changed
+     */
     if (config.checkout) {
         def results = checkout([
             $class: 'GitSCM',
@@ -35,8 +41,8 @@ def call(Map config) {
             doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
             extensions: [
                 [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                [$class: 'WipeWorkspace']
-            ],
+                [$class: 'WipeWorkspace'],
+            ] + config.get('checkout_extensions', []),
             userRemoteConfigs: scm.userRemoteConfigs,
         ])
 
@@ -46,40 +52,43 @@ def call(Map config) {
         }
     }
 
-    // Remote repo name. We don't expect more than one remote
-    env['GIT_REMOTE'] = sh(returnStdout: true, script: 'git remote').trim()
-    // Do we building from branch or tag?
-    env['GIT_BRANCH_OR_TAG'] = BranchOrTag(env)
-    // Last version from tags
-    env['GIT_LAST_VERSION_TAG'] = sh(returnStdout: true,
-        script: 'git tag -l "v[0-9]*"| sort -V | tail -n 1').trim()
-    env['GIT_LOCAL_BRANCH'] = "${env['GIT_BRANCH'].replaceFirst('^' + env['GIT_REMOTE'] + '/', '')}"
+    env['GIT_CHECKOUT_DIR'] = env['GIT_CHECKOUT_DIR'] ? env['GIT_CHECKOUT_DIR'] : env['WORKSPACE']
+    dir(env['GIT_CHECKOUT_DIR']) {
+        // Remote repo name. We don't expect more than one remote
+        env['GIT_REMOTE'] = sh(returnStdout: true, script: 'git remote').trim()
+        // Do we building from branch or tag?
+        env['GIT_BRANCH_OR_TAG'] = BranchOrTag(env)
+        // Last version from tags
+        env['GIT_LAST_VERSION_TAG'] = sh(returnStdout: true,
+            script: 'git tag -l "v[0-9]*"| sort -V | tail -n 1').trim()
+        env['GIT_LOCAL_BRANCH'] = "${env['GIT_BRANCH'].replaceFirst('^' + env['GIT_REMOTE'] + '/', '')}"
 
-    // Geting version parts
-    versionParts = [:]
-    if (!(env['GIT_LAST_VERSION_TAG'] =~ /^v(\d+\.)+\d+$/)) {
-        echo "There no or wrong last version in tags (${env['GIT_LAST_VERSION_TAG']}), creating the first release 0.0.1"
-        versionParts.major = 0
-        versionParts.minor = 0
-        versionParts.patch = 1
-        env['NEW_VERSION'] = "${versionParts.major}.${versionParts.minor}.${versionParts.patch}"
-    } else {
-        env['GIT_LAST_VERSION'] = env['GIT_LAST_VERSION_TAG'].replaceFirst(~/^v/,'')
-        vp = env['GIT_LAST_VERSION'].tokenize('.')
-        vp.eachWithIndex{v, k ->
-            vp[k] = v?.isInteger() ? v.toInteger() : 0
+        // Geting version parts
+        versionParts = [:]
+        if (!(env['GIT_LAST_VERSION_TAG'] =~ /^v(\d+\.)+\d+$/)) {
+            echo "There no or wrong last version in tags (${env['GIT_LAST_VERSION_TAG']}), creating the first release 0.0.1"
+            versionParts.major = 0
+            versionParts.minor = 0
+            versionParts.patch = 1
+            env['NEW_VERSION'] = "${versionParts.major}.${versionParts.minor}.${versionParts.patch}"
+        } else {
+            env['GIT_LAST_VERSION'] = env['GIT_LAST_VERSION_TAG'].replaceFirst(~/^v/,'')
+            vp = env['GIT_LAST_VERSION'].tokenize('.')
+            vp.eachWithIndex{v, k ->
+                vp[k] = v?.isInteger() ? v.toInteger() : 0
+            }
+            versionParts.major = vp[0]
+            versionParts.minor = vp[1]
+            versionParts.patch = vp[2]
+            env['NEW_VERSION'] = Version(params.UPDATE_VERSION, versionParts)
         }
-        versionParts.major = vp[0]
-        versionParts.minor = vp[1]
-        versionParts.patch = vp[2]
-        env['NEW_VERSION'] = Version(params.UPDATE_VERSION, versionParts)
-    }
 
-    env['GIT_NEW_TAG'] = "v${env['NEW_VERSION']}"
-    env['TARGET_VERSION'] = env['GIT_BRANCH_OR_TAG'] == 'branch' ? env['NEW_VERSION'] : env['GIT_LAST_VERSION']
+        env['GIT_NEW_TAG'] = "v${env['NEW_VERSION']}"
+        env['TARGET_VERSION'] = env['GIT_BRANCH_OR_TAG'] == 'branch' ? env['NEW_VERSION'] : env['GIT_LAST_VERSION']
 
-    // We change build display name by default
-    if (config.get('changeBuildName', true)) {
-        currentBuild.displayName = "v${env['TARGET_VERSION']} (${env['BRANCH_NAME']} - ${params.UPDATE_VERSION})"
+        // We change build display name by default
+        if (config.get('changeBuildName', true)) {
+            currentBuild.displayName = "v${env['TARGET_VERSION']} (${env['BRANCH_NAME']} - ${params.UPDATE_VERSION})"
+        }
     }
 }
