@@ -92,9 +92,9 @@ def cleanNotFinishedBuilds(statusesToClean = ['ABORTED', 'NOT_BUILT']) {
 }
 
 // Processing exceptions in `catch` sections
-def processException(hudson.AbortException e) {
+def processException(java.lang.Exception e) {
     currentBuild.result = 'FAILURE'
-    error "Something wrong, exception is: ${e}"
+    error "Something wrong: ${e.getClass().getCanonicalName()} thrown with message: ${e.getMessage()}"
 }
 
 // Post running slack notifications
