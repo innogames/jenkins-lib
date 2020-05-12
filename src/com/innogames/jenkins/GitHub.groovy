@@ -38,6 +38,15 @@ class GitHub implements Serializable {
         // 3, 4 - username@ and username
         // 5 - hostname
         // 6 - repository
+        /*
+        test with:
+        git@gitlab.com:Felixoid/test.git
+        git@github.com:innogames/graphite-ch-optimizer.git
+        https://github.com/innogames/graphite-ch-optimizer.git
+        git://github.com/innogames/graphite-ch-optimizer.git
+        ssh://git@github.com/innogames/graphite-ch-optimizer.git
+        aur@aur.archlinux.org:graphite-api.git
+        */
         def re = ~$/^((https|git|ssh)://)*((\w+)@)*([-a-zA-Z0-9.]+)[/:](\S+)\.git$$/$
         def match
         if ((match = url =~ re)) {
