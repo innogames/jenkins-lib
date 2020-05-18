@@ -83,8 +83,15 @@ def call(Map config) {
             env['NEW_VERSION'] = Version(params.UPDATE_VERSION, versionParts)
         }
 
+        // Set GIT_CURRENT_VERSION to a tag name without leading 'v' with fallback to GIT_LAST_VERSION
+        if (env['GIT_BRANCH_OR_TAG'] == 'tag' && env['GIT_LOCAL_BRANCH'] =~ /^v(\d+\.)+\d+$/) {
+            env['GIT_CURRENT_VERSION'] = env['GIT_LOCAL_BRANCH'].replaceFirst(~/^v/,'')
+        } else {
+            env['GIT_CURRENT_VERSION'] = env['GIT_LAST_VERSION']
+        }
+
         env['GIT_NEW_TAG'] = "v${env['NEW_VERSION']}"
-        env['TARGET_VERSION'] = env['GIT_BRANCH_OR_TAG'] == 'branch' ? env['NEW_VERSION'] : env['GIT_LAST_VERSION']
+        env['TARGET_VERSION'] = env['GIT_BRANCH_OR_TAG'] == 'branch' ? env['NEW_VERSION'] : env['GIT_CURRENT_VERSION']
 
         // We change build display name by default
         if (config.get('changeBuildName', true)) {
