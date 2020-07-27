@@ -51,15 +51,16 @@ def uploadPackage(Map config) {
     if (!fileExists(config.file)) {
         error "File ${config.file} doesn't exists, abort uploading to repo"
     }
-    if (!config.KeepVersions) {
+    if (!config.keepVersions) {
         config.keepVersions = 5
     }
+    curlCommand = "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
     if (config.emulate) {
         echo "Emulate uploading of ${config.file} to ${config.repo} with token ${config.token}"
-        sh "echo curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
+        sh "echo ${curlCommand}"
         echo "${config.file} uploaded to ${config.repo}"
     } else {
-        sh "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
+        sh curlCommand
         echo "${config.file} uploaded to ${config.repo}"
     }
 }
