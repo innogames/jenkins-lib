@@ -46,16 +46,20 @@ def Boolean onlyJenkinsRelease() {
 //  - file: debian package file
 //  - token: deb-drop token
 //  - repo: repository for uploading
+//  - keepVersions: Number of versions to keep
 def uploadPackage(Map config) {
     if (!fileExists(config.file)) {
         error "File ${config.file} doesn't exists, abort uploading to repo"
     }
+    if (!config.KeepVersions) {
+        config.keepVersions = 5
+    }
     if (config.emulate) {
         echo "Emulate uploading of ${config.file} to ${config.repo} with token ${config.token}"
-        sh "echo curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' '${env.DEB_DROP_URL}'"
+        sh "echo curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
         echo "${config.file} uploaded to ${config.repo}"
     } else {
-        sh "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' '${env.DEB_DROP_URL}'"
+        sh "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
         echo "${config.file} uploaded to ${config.repo}"
     }
 }
