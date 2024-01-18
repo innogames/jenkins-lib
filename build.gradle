@@ -1,0 +1,78 @@
+plugins {
+	id 'groovy'
+	id 'idea'
+}
+
+sourceSets {
+	main {
+		groovy {
+			srcDirs { ['jenkins', 'src', 'vars'] }
+		}
+		resources.srcDirs = ['resources']
+	}
+
+	test {
+		groovy {
+			srcDirs { ['test'] }
+		}
+		resources.srcDirs = ['testResources']
+	}
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+	jcenter()
+	maven {
+		url 'https://repo.jenkins-ci.org/releases/'
+		name 'Jenkins Releases Repository'
+	}
+//	google()
+//	maven {
+//		url 'https://artifacts.innogames.de/innogames-maven/'
+//		name 'innogames-artifactory'
+//		credentials {
+//			username System.getProperty('com.innogames.artifactoryUser')
+//			password System.getProperty('com.innogames.artifactoryPassword')
+//		}
+//	}
+}
+
+dependencies {
+	implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.6'
+//	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '2.5.4'
+//	implementation group: 'org.codehaus.groovy', name: 'groovy-json', version: '2.5.0'
+//	implementation group: 'org.codehaus.groovy', name: 'groovy-test', version: '2.5.0'
+
+	implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.24'
+
+	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6'
+
+//	implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.85'
+	implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.245'
+//	implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.245', ext: 'jar'
+//	implementation group: 'org.jenkins-ci.tools', name: 'gradle-jpi-plugin', version: '0.27.0'
+	implementation group: 'org.jenkins-ci.tools', name: 'gradle-jpi-plugin', version: '0.27.0', ext: 'jar'
+	implementation group: 'org.jenkins-ci.plugins', name: 'git', version: '4.2.2', ext: 'jar'
+	implementation group: 'org.jenkins-ci.plugins', name: 'pipeline-build-step', version: '2.11', ext: 'jar' // Pipeline: Build Step
+	implementation group: 'org.jenkins-ci.plugins', name: 'cloudbees-folder', version: '6.11.1', ext: 'jar' // Folders
+//	implementation(group: 'org.jenkins-ci.plugins', name: 'cloudbees-folder', version: '6.7') {
+//		artifact {
+//			name = 'cloudbees-folder'
+//			type = 'jar'
+//		}
+//	}
+	implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-cps', version: '2.80', ext: 'jar' // Pipeline: Groovy
+	implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-support', version: '3.4', ext: 'jar' // Pipeline: Groovy
+	implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-aggregator', version: '2.6', ext: 'jar' // Pipeline
+	implementation group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '2.22', ext: 'jar' // Pipeline: Step API
+
+	implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-api', version: '1.6.0', ext: 'jar' // Pipeline: Model API
+	implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-definition', version: '1.6.0', ext: 'jar' // Pipeline: Declarative
+	implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-extensions', version: '1.6.0', ext: 'jar' // Pipeline: Declarative Extension Points API
+	implementation group: 'org.jenkinsci.plugins', name: 'pipeline-model-declarative-agent', version: '1.1.1', ext: 'jar' // Pipeline: Declarative Agent API
+
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+
+	testImplementation group: 'junit', name: 'junit', version: '4.12'
+}
