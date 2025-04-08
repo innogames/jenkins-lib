@@ -105,8 +105,8 @@ def processException(java.lang.Exception e) {
 // Post running slack notifications
 def postSlack(verbose = false, channel = null) {
     echo "Slack notification with verbose=${verbose} and overwriting of default channel=${channel}"
-    colors = [SUCCESS: 'good', FAILURE: 'danger', UNSTABLE: 'warning']
-    msg = env.JOB_NAME + " - " + currentBuild.displayName
+    def colors = [SUCCESS: 'good', FAILURE: 'danger', UNSTABLE: 'warning']
+    def msg = env.JOB_NAME + " - " + currentBuild.displayName
 
     if (['FAILURE', 'UNSTABLE'].contains(currentBuild.currentResult)) {
         if (
@@ -128,7 +128,7 @@ def postSlack(verbose = false, channel = null) {
       currentBuild.getPreviousBuild() && // if it's not null
       currentBuild.getPreviousBuild().result != 'SUCCESS'
     ) {
-        lastSuccessfulBuild = currentBuild.getPreviousBuild()
+        def lastSuccessfulBuild = currentBuild.getPreviousBuild()
         while (lastSuccessfulBuild && lastSuccessfulBuild.result != 'SUCCESS') {
             lastSuccessfulBuild = lastSuccessfulBuild.getPreviousBuild()
         }
