@@ -64,7 +64,7 @@ def call(Map config) {
         env['GIT_LOCAL_BRANCH'] = "${env['GIT_BRANCH'].replaceFirst('^' + env['GIT_REMOTE'] + '/', '')}"
 
         // Geting version parts
-        versionParts = [:]
+        def versionParts = [:]
         if (!(env['GIT_LAST_VERSION_TAG'] =~ /^v(\d+\.)+\d+$/)) {
             echo "There no or wrong last version in tags (${env['GIT_LAST_VERSION_TAG']}), creating the first release 0.0.1"
             versionParts.major = 0
@@ -73,7 +73,7 @@ def call(Map config) {
             env['NEW_VERSION'] = "${versionParts.major}.${versionParts.minor}.${versionParts.patch}"
         } else {
             env['GIT_LAST_VERSION'] = env['GIT_LAST_VERSION_TAG'].replaceFirst(~/^v/,'')
-            vp = env['GIT_LAST_VERSION'].tokenize('.')
+            def vp = env['GIT_LAST_VERSION'].tokenize('.')
             vp.eachWithIndex{v, k ->
                 vp[k] = v?.isInteger() ? v.toInteger() : 0
             }
