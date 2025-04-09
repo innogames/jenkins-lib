@@ -54,7 +54,7 @@ def uploadPackage(Map config) {
     if (!config.keepVersions) {
         config.keepVersions = 5
     }
-    curlCommand = "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
+    def curlCommand = "curl -qf -F token='${config.token}' -F repos='${config.repo}' -F package='@${config.file}' -F versions='${config.keepVersions}' '${env.DEB_DROP_URL}'"
     if (config.emulate) {
         echo "Emulate uploading of ${config.file} to ${config.repo} with token ${config.token}"
         sh "echo ${curlCommand}"
@@ -83,7 +83,7 @@ def cleanNotFinishedBuilds(statusesToClean = ['ABORTED', 'NOT_BUILT']) {
     // We HAVE to use `for` with reversed order.
     // If we use `[].each` -> after deleting some build java.util.NoSuchElementException caused
     // If we use `i++` -> after any deletion the rest of array shifted "left"
-    for (i = builds.size() - 1; i >= 0; i--) {
+    for (def i = builds.size() - 1; i >= 0; i--) {
         if (statusesToClean.contains(builds[i].result.toString())) {
             println "going to delete ${builds[i]}"
             try {
